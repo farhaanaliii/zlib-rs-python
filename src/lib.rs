@@ -97,9 +97,9 @@ fn parse_wbits(wbits: i32) -> (bool, u8) {
     if wbits < 0 {
         (false, (-wbits).min(15) as u8)
     } else if wbits > 15 {
-        (true, (wbits - 16).max(8).min(15) as u8)
+        (true, (wbits - 16).clamp(8, 15) as u8)
     } else {
-        (true, wbits.max(8).min(15) as u8)
+        (true, wbits.clamp(8, 15) as u8)
     }
 }
 
