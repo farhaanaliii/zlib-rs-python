@@ -1,0 +1,23 @@
+[package]
+name = "zlib-rs-python"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+description = "High-performance Python bindings for zlib-rs"
+license = "MIT"
+repository = "https://github.com/farhaanaliii/zlib-rs-python"
+authors = ["Farhaan Ali <i.farhanali.dev@gmail.com>"]
+
+[lib]
+name = "zlib_rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.28.2", features = ["extension-module"] }
+zlib-rs = { version = "0.6", features = ["std"] }
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+opt-level = 3
+strip = "symbols"

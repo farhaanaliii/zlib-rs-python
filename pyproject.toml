@@ -1,0 +1,47 @@
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "zlib-rs"
+dynamic = ["version"]
+description = "High-performance, memory-safe Python bindings for zlib-rs (Rust). Up to 22x faster than CPython zlib."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.8"
+authors = [
+    { name = "Farhaan Ali", email = "i.farhanali.dev@gmail.com" },
+]
+keywords = ["zlib", "compression", "rust", "performance", "deflate"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: System :: Archiving :: Compression",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.urls]
+Homepage = "https://github.com/farhaanaliii/zlib-rs-python"
+Repository = "https://github.com/farhaanaliii/zlib-rs-python"
+Issues = "https://github.com/farhaanaliii/zlib-rs-python/issues"
+Documentation = "https://github.com/farhaanaliii/zlib-rs-python#readme"
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
+python-source = "python"
+module-name = "zlib_rs"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
