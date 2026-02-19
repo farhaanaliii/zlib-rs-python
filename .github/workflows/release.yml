@@ -23,8 +23,11 @@ jobs:
         include:
           - target: x86_64-unknown-linux-gnu
             runner: ubuntu-latest
+            interpreter: --find-interpreter
           - target: aarch64-unknown-linux-gnu
             runner: ubuntu-latest
+            # Cross-compilation container lacks Python; specify ABI explicitly
+            interpreter: -i 3.12
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -36,7 +39,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           command: build
-          args: --release --strip --out dist
+          args: --release --strip --out dist ${{ matrix.interpreter }}
           manylinux: auto
       - name: Upload wheels
         uses: actions/upload-artifact@v4

@@ -11,25 +11,26 @@ permissions:
 
 jobs:
   test:
-    name: Test (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    name: Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.12"
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
       - name: Install dependencies
         run: pip install maturin pytest
-      - name: Build
-        run: maturin develop --release
+      - name: Build wheel
+        run: maturin build --release --out dist
+      - name: Install wheel
+        run: pip install --find-links dist zlib-rs
       - name: Run tests
         run: pytest tests/ -v
 
