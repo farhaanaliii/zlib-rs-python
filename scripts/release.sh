@@ -71,10 +71,11 @@ if [[ "$confirm" != "y" ]]; then
 fi
 
 # Commit, tag, and push
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
 git add Cargo.toml python/zlib_rs/__init__.py
 git commit -m "release: v$VERSION"
 git tag -a "v$VERSION" -m "Release v$VERSION"
-git push origin main
+git push origin "$BRANCH"
 git push origin "v$VERSION"
 
 echo ""

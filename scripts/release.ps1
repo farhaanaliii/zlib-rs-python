@@ -81,10 +81,11 @@ if ($confirm -ne "y") {
 }
 
 # Commit, tag, and push
+$branch = git rev-parse --abbrev-ref HEAD
 git add Cargo.toml python/zlib_rs/__init__.py
 git commit -m "release: v$Version"
 git tag -a "v$Version" -m "Release v$Version"
-git push origin main
+git push origin $branch
 git push origin "v$Version"
 
 Write-Host ""
