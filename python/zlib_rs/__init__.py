@@ -14,6 +14,6 @@ Usage:
 
 from .zlib_rs import *  # noqa: F401, F403
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __author__ = "Farhaan Ali"
 __license__ = "MIT"
