@@ -1,9 +1,7 @@
+use ::zlib_rs::{Deflate, DeflateFlush, Inflate, InflateFlush, ReturnCode, Status};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
-use ::zlib_rs::{
-    Deflate, DeflateFlush, Inflate, InflateFlush, ReturnCode, Status,
-};
 
 pyo3::import_exception!(zlib, error);
 
@@ -74,9 +72,7 @@ fn decompress(py: Python<'_>, data: &[u8], wbits: i32, bufsize: usize) -> PyResu
                     ReturnCode::BufError => {
                         size *= 2;
                         if size > 256 * 1024 * 1024 {
-                            return Err(PyErr::new::<error, _>(
-                                "Decompressed data is too large",
-                            ));
+                            return Err(PyErr::new::<error, _>("Decompressed data is too large"));
                         }
                     }
                     _ => {
@@ -127,7 +123,10 @@ impl Compress {
 
         let old_total_out = self.inner.total_out();
 
-        match self.inner.compress(data, &mut self.buf, DeflateFlush::NoFlush) {
+        match self
+            .inner
+            .compress(data, &mut self.buf, DeflateFlush::NoFlush)
+        {
             Ok(_) => {
                 let written = (self.inner.total_out() - old_total_out) as usize;
                 Ok(PyBytes::new(py, &self.buf[..written]).unbind())
@@ -201,7 +200,12 @@ struct Decompress {
 impl Decompress {
     /// Decompress data; returns a bytes object.
     #[pyo3(signature = (data, max_length = 0))]
-    fn decompress(&mut self, py: Python<'_>, data: &[u8], max_length: usize) -> PyResult<Py<PyBytes>> {
+    fn decompress(
+        &mut self,
+        py: Python<'_>,
+        data: &[u8],
+        max_length: usize,
+    ) -> PyResult<Py<PyBytes>> {
         // Ensure scratch buffer is large enough
         let buf_size = (data.len() * 4).max(32768);
         if self.buf.len() < buf_size {
@@ -218,7 +222,10 @@ impl Decompress {
             let old_total_in = self.inner.total_in();
             let input = &data[input_offset..];
 
-            match self.inner.decompress(input, &mut self.buf, InflateFlush::NoFlush) {
+            match self
+                .inner
+                .decompress(input, &mut self.buf, InflateFlush::NoFlush)
+            {
                 Ok(status) => {
                     let written = (self.inner.total_out() - old_total_out) as usize;
                     let consumed = (self.inner.total_in() - old_total_in) as usize;
@@ -229,8 +236,7 @@ impl Decompress {
                     if max_length > 0 && all_output.len() >= max_length {
                         all_output.truncate(max_length);
                         if input_offset < data.len() {
-                            self.unconsumed_tail =
-                                PyBytes::new(py, &data[input_offset..]).unbind();
+                            self.unconsumed_tail = PyBytes::new(py, &data[input_offset..]).unbind();
                         }
                         break;
                     }
@@ -284,9 +290,9 @@ fn compressobj(
     let mut inner = Deflate::new(level, zlib_header, window_bits);
 
     if let Some(dict) = zdict {
-        inner.set_dictionary(dict).map_err(|e| {
-            PyErr::new::<error, _>(format!("Error setting dictionary: {:?}", e))
-        })?;
+        inner
+            .set_dictionary(dict)
+            .map_err(|e| PyErr::new::<error, _>(format!("Error setting dictionary: {:?}", e)))?;
     }
 
     Ok(Compress {
@@ -303,9 +309,9 @@ fn decompressobj(py: Python<'_>, wbits: i32, zdict: Option<&[u8]>) -> PyResult<D
     let mut inner = Inflate::new(zlib_header, window_bits);
 
     if let Some(dict) = zdict {
-        inner.set_dictionary(dict).map_err(|e| {
-            PyErr::new::<error, _>(format!("Error setting dictionary: {:?}", e))
-        })?;
+        inner
+            .set_dictionary(dict)
+            .map_err(|e| PyErr::new::<error, _>(format!("Error setting dictionary: {:?}", e)))?;
     }
 
     Ok(Decompress {
@@ -664,11 +670,8 @@ mod tests {
             let mut inflater = Inflate::new(true, 15);
             let mut decompressed = vec![0u8; data.len() * 2];
 
-            let result = inflater.decompress(
-                &output[..total],
-                &mut decompressed,
-                InflateFlush::NoFlush,
-            );
+            let result =
+                inflater.decompress(&output[..total], &mut decompressed, InflateFlush::NoFlush);
             assert!(result.is_ok(), "inflate failed at level {}", level);
 
             let total_out = inflater.total_out() as usize;
