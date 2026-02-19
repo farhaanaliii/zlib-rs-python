@@ -180,6 +180,26 @@ impl Compress {
 
         Ok(PyBytes::new(py, &all_output).unbind())
     }
+
+    /// Number of bytes consumed so far.
+    #[getter]
+    fn total_in(&self) -> u64 {
+        self.inner.total_in()
+    }
+
+    /// Number of bytes produced so far.
+    #[getter]
+    fn total_out(&self) -> u64 {
+        self.inner.total_out()
+    }
+
+    fn __repr__(&self) -> String {
+        format!(
+            "<Compress total_in={} total_out={}>",
+            self.inner.total_in(),
+            self.inner.total_out()
+        )
+    }
 }
 
 /// Streaming decompression object.
@@ -265,6 +285,59 @@ impl Decompress {
         }
 
         Ok(PyBytes::new(py, &all_output).unbind())
+    }
+
+    /// Flush the decompression buffer; returns remaining decompressed bytes.
+    #[pyo3(signature = (length = 16384))]
+    fn flush(&mut self, py: Python<'_>, length: usize) -> PyResult<Py<PyBytes>> {
+        let buf_size = length.max(4096);
+        if self.buf.len() < buf_size {
+            self.buf.resize(buf_size, 0);
+        }
+
+        let mut all_output = Vec::with_capacity(buf_size);
+
+        loop {
+            let old_total_out = self.inner.total_out();
+            match self
+                .inner
+                .decompress(&[], &mut self.buf, InflateFlush::Finish)
+            {
+                Ok(status) => {
+                    let written = (self.inner.total_out() - old_total_out) as usize;
+                    all_output.extend_from_slice(&self.buf[..written]);
+
+                    if status == Status::StreamEnd || written == 0 {
+                        self.eof = true;
+                        break;
+                    }
+                }
+                Err(_) => break,
+            }
+        }
+
+        Ok(PyBytes::new(py, &all_output).unbind())
+    }
+
+    /// Number of bytes consumed so far.
+    #[getter]
+    fn total_in(&self) -> u64 {
+        self.inner.total_in()
+    }
+
+    /// Number of bytes produced so far.
+    #[getter]
+    fn total_out(&self) -> u64 {
+        self.inner.total_out()
+    }
+
+    fn __repr__(&self) -> String {
+        format!(
+            "<Decompress total_in={} total_out={} eof={}>",
+            self.inner.total_in(),
+            self.inner.total_out(),
+            self.eof
+        )
     }
 }
 

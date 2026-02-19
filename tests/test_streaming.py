@@ -161,3 +161,105 @@ class TestDecompressObj:
         d = zlib_rs.decompressobj()
         result = d.decompress(compressed)
         assert result == b""
+
+
+class TestStreamingGetters:
+    """Tests for total_in, total_out, and __repr__ on streaming objects."""
+
+    def test_compress_total_in_out(self):
+        data = b"Hello, world!" * 500
+        c = zlib_rs.compressobj()
+        c.compress(data)
+        c.flush()
+
+        assert c.total_in > 0
+        assert c.total_out > 0
+        assert c.total_in >= len(data)
+
+    def test_compress_total_out_less_for_compressible(self):
+        """Compressed output should be smaller than repeated input."""
+        data = b"AAAA" * 10000
+        c = zlib_rs.compressobj(level=9)
+        c.compress(data)
+        c.flush()
+
+        assert c.total_out < c.total_in
+
+    def test_decompress_total_in_out(self):
+        data = b"Decompress getters test" * 500
+        compressed = zlib_rs.compress(data)
+
+        d = zlib_rs.decompressobj()
+        d.decompress(compressed)
+
+        assert d.total_in > 0
+        assert d.total_out > 0
+        assert d.total_out >= len(data)
+
+    def test_compress_repr(self):
+        c = zlib_rs.compressobj()
+        r = repr(c)
+        assert r.startswith("<Compress")
+        assert "total_in=" in r
+        assert "total_out=" in r
+
+    def test_decompress_repr(self):
+        d = zlib_rs.decompressobj()
+        r = repr(d)
+        assert r.startswith("<Decompress")
+        assert "total_in=" in r
+        assert "total_out=" in r
+        assert "eof=" in r
+
+    def test_repr_updates_after_use(self):
+        data = b"repr update test" * 500
+        c = zlib_rs.compressobj()
+        before = repr(c)
+        c.compress(data)
+        c.flush()
+        after = repr(c)
+        assert before != after
+
+
+class TestDecompressFlush:
+    """Tests for Decompress.flush() method."""
+
+    def test_flush_after_decompress(self):
+        data = b"Flush test data" * 500
+        compressed = zlib_rs.compress(data)
+
+        d = zlib_rs.decompressobj()
+        result = d.decompress(compressed)
+        remaining = d.flush()
+
+        assert result == data
+        assert isinstance(remaining, bytes)
+
+    def test_flush_returns_bytes(self):
+        compressed = zlib_rs.compress(b"short")
+
+        d = zlib_rs.decompressobj()
+        d.decompress(compressed)
+        flushed = d.flush()
+
+        assert isinstance(flushed, bytes)
+
+    def test_flush_with_length(self):
+        data = b"flush length test" * 500
+        compressed = zlib_rs.compress(data)
+
+        d = zlib_rs.decompressobj()
+        d.decompress(compressed)
+        flushed = d.flush(length=4096)
+
+        assert isinstance(flushed, bytes)
+
+    def test_flush_sets_eof(self):
+        data = b"eof after flush" * 100
+        compressed = zlib_rs.compress(data)
+
+        d = zlib_rs.decompressobj()
+        d.decompress(compressed)
+        d.flush()
+
+        assert d.eof is True
