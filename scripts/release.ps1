@@ -36,7 +36,7 @@ Write-Header "Preparing release v$Version"
 # 1. Update Cargo.toml version
 Write-Header "1/5 Updating Cargo.toml"
 $cargoToml = Get-Content "Cargo.toml" -Raw
-$cargoToml = $cargoToml -replace 'version = "[^"]*"', "version = ""$Version"""
+$cargoToml = $cargoToml -replace '(?m)^version = "[^"]*"', "version = ""$Version"""
 Set-Content "Cargo.toml" $cargoToml -NoNewline
 Write-Host "Cargo.toml updated to $Version" -ForegroundColor Green
 
